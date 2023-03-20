@@ -1,0 +1,40 @@
+{
+    "list_of_benefits": [
+        {
+            "id": 1,
+            "name": "Vales de Despensa",
+            "type": "benefit",
+            "value": "vales"
+        },
+        {
+            "id": 2,
+            "name": "Bonos",
+            "type": "benefit",
+            "value": "bonos"
+        },
+        {
+            "id": 3,
+            "name": "Comisiones",
+            "type": "benefit",
+            "value": "comisiones"
+        },
+        {
+            "id": 4,
+            "name": "Premios",
+            "type": "benefit",
+            "value": "premios"
+        },
+        {
+            "id": 5,
+            "name": "Fondo de ahorro",
+            "type": "benefit",
+            "value": "fondo de ahorro"
+        },
+        {
+            "id": 6,
+            "name": "otro",
+            "type": "benefit",
+            "value": "otro"
+        }
+    ]
+}
