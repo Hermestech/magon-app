@@ -9,6 +9,8 @@ import {
     Select,
     DatePicker,
     InputNumber,
+    Typography,
+    Divider
 } from 'antd';
 
 const { Option } = Select;
@@ -23,20 +25,53 @@ const mapBenefitsIntoOptions = (benefits: IBenefit[]) => {
     });
 }
 
+const BenefitValueInput = ({
+    benefit,
+    benefitValues,
+    setBenefitValues,
+}: { benefit: any; benefitValues: any; setBenefitValues: any; }) => { 
+
+    const handleChange = (value: any) => { 
+        setBenefitValues((prevValues: any) => ({
+            ...prevValues,
+            [benefit.value]: value,
+        }))
+    }
+    
+    return (
+        <Form.Item label={`Valor de ${benefit.name}:`}>   
+            <InputNumber
+                name={benefit.value}
+                id={benefit.value}
+                value={benefitValues[benefit.value] || ""}
+                onChange={handleChange}
+            />
+        </Form.Item>
+    )
+}
 
 export const DynamicForm = () => { 
+    const d = new Date();
+    let today = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
     const list = listOfBenefits.list_of_benefits;
+    const foodVouchers = 810;
+    const savingFunds = 405.12;
+    const puntualBonus = 540.18;
     const [formValues, setFormValues] = React.useState({
         companyName: '',
         startDate: '',
-        salary: '',
+        salary: 0,
         benefits: [],
         tips: false,
         tipsAmount: '',
         bonusDays: 15, 
         vacationDays: 12,
-        vacationBonus: 25,
+        vacationBonus: 0.25,
     });
+    const [benefitValues, setBenefitValues] = React.useState({});
+    console.log(benefitValues);
+    const baseSalary = formValues.salary / 30;
+    const integratedSalary = baseSalary + ((formValues.bonusDays/365*baseSalary + formValues.vacationDays*formValues.vacationBonus/365 * baseSalary) + foodVouchers/30 + savingFunds/30 + puntualBonus/30);
 
     const handleChange = (event:any,name:any,value:any) => { 
         if (!event) {
@@ -46,6 +81,19 @@ export const DynamicForm = () => {
                     [name]: value,
                 }
             })
+
+            if (name === 'benefits') {
+                const benefits = value.map((id: string) => {
+                    return list.find((benefit) => benefit.value === id);
+                });
+                const benefitValues = benefits.reduce((acc: any, benefit: any) => {
+                    return {
+                        ...acc,
+                        [benefit.value]: 0,
+                    }
+                }, {});
+                setBenefitValues(benefitValues);
+            }
         } else {
             const { name, value } = event.target;
             setFormValues((prevValues) => {
@@ -63,6 +111,7 @@ export const DynamicForm = () => {
     };
 
     return (
+        <>
         <Form>
             <Form.Item
                 label="Nombre de la empresa para la que trabajas:"
@@ -104,7 +153,21 @@ export const DynamicForm = () => {
                 >
                     {mapBenefitsIntoOptions(list)}
                 </Select>
-            </Form.Item>
+                </Form.Item>
+                {
+                    formValues.benefits.map((id: string) => { 
+                        const benefit = list.find((benefit) => benefit.value === id);
+                        return (
+                            <BenefitValueInput
+                                key={benefit?.id}
+                                benefit={benefit}
+                                benefitValues={benefitValues}
+                                setBenefitValues={setBenefitValues}
+                            />
+                        )
+                    }
+                )
+                }
             {/*Campo: ¿Recibes propinas? */}
             <Form.Item label="¿Recibes propinas?">
                 <Checkbox
@@ -165,5 +228,16 @@ export const DynamicForm = () => {
                 </Button>
             </Form.Item>
         </Form>
+            <Divider />
+            <Typography>Fecha de ingreso:{formValues.startDate}</Typography>
+            <Typography>Fecha de salida: {today} </Typography>
+            <Typography>Salario base: {baseSalary.toFixed(2)} </Typography>
+            <Typography>Días de aguinaldo: {formValues.bonusDays}</Typography>
+            <Typography>Días de vacaciones: {formValues.vacationDays}</Typography>
+            <Typography>Prima vacacional: {formValues.vacationBonus}</Typography>
+            <Typography>Salario Diario Integrado: {integratedSalary.toFixed(2)}</Typography>
+            <Divider />
+            <Typography>Indemnización constitucional: {(integratedSalary * 90).toFixed(2)}</Typography>
+        </>
     )
 }
