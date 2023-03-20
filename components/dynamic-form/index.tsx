@@ -69,9 +69,9 @@ export const DynamicForm = () => {
         vacationBonus: 0.25,
     });
     const [benefitValues, setBenefitValues] = React.useState({});
-    console.log(benefitValues);
+    const sumBenefitValues = Object.values(benefitValues).reduce((acc: any, value: any) => acc + Number(value), 0);
     const baseSalary = formValues.salary / 30;
-    const integratedSalary = baseSalary + ((formValues.bonusDays/365*baseSalary + formValues.vacationDays*formValues.vacationBonus/365 * baseSalary) + foodVouchers/30 + savingFunds/30 + puntualBonus/30);
+    const integratedSalary = baseSalary + ((formValues.bonusDays/365*baseSalary + formValues.vacationDays*formValues.vacationBonus/365 * baseSalary) + Number(sumBenefitValues)/30);
 
     const handleChange = (event:any,name:any,value:any) => { 
         if (!event) {
