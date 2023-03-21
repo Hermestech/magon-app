@@ -1,5 +1,6 @@
 import * as React from 'react';
 import listOfBenefits from '../../utils/benefits.json';
+import moment from 'moment';
 
 import {
     Form, 
@@ -13,8 +14,14 @@ import {
     Divider
 } from 'antd';
 
+import { DynamicFormMethods } from '@/utils/dynamic-form-methods';
+
+//Constantes y variables 
+const list = listOfBenefits.list_of_benefits;
+const minimumWage = 207.44;
 const { Option } = Select;
 
+// Métodos de ayuda
 const mapBenefitsIntoOptions = (benefits: IBenefit[]) => { 
     return benefits.map((benefit) => {
         return (
@@ -51,15 +58,10 @@ const BenefitValueInput = ({
 }
 
 export const DynamicForm = () => { 
-    const d = new Date();
-    let today = d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
-    const list = listOfBenefits.list_of_benefits;
-    const foodVouchers = 810;
-    const savingFunds = 405.12;
-    const puntualBonus = 540.18;
     const [formValues, setFormValues] = React.useState({
         companyName: '',
         startDate: '',
+        finishDate: '',
         salary: 0,
         benefits: [],
         tips: false,
@@ -69,9 +71,46 @@ export const DynamicForm = () => {
         vacationBonus: 0.25,
     });
     const [benefitValues, setBenefitValues] = React.useState({});
+
     const sumBenefitValues = Object.values(benefitValues).reduce((acc: any, value: any) => acc + Number(value), 0);
+
     const baseSalary = formValues.salary / 30;
-    const integratedSalary = baseSalary + ((formValues.bonusDays/365*baseSalary + formValues.vacationDays*formValues.vacationBonus/365 * baseSalary) + Number(sumBenefitValues)/30);
+
+    const integratedSalary = baseSalary + ((formValues.bonusDays / 365 * baseSalary + formValues.vacationDays * formValues.vacationBonus / 365 * baseSalary) + Number(sumBenefitValues) / 30);
+    
+    const differenceBetweenDates = DynamicFormMethods.getDifferenceBetweenDates(formValues.startDate, formValues.finishDate)
+
+    const daysSinceDismissal = DynamicFormMethods.getDaysSinceDismission(formValues.finishDate);
+
+    const downWages = DynamicFormMethods.getDownWages(formValues.finishDate, integratedSalary);
+
+    const seniorityBonus = DynamicFormMethods.getSeniorityBonus(formValues.startDate, formValues.finishDate, minimumWage, integratedSalary);
+
+    const proportionalDays = DynamicFormMethods.getProportionalDays(formValues.startDate, formValues.finishDate);
+
+    const proportionalBonus = DynamicFormMethods.getProportionalBonus(formValues.startDate, formValues.finishDate, formValues.bonusDays ,baseSalary);
+
+    const proportionalDaysOfCurrentPeriod = DynamicFormMethods.getProportionalDaysOfCurrentPeriod(formValues.startDate, formValues.finishDate);
+
+    const proportionalVacation = DynamicFormMethods.getProportionalVacation(formValues.vacationDays, formValues.startDate, formValues.finishDate, baseSalary);
+
+    const proportionalVacationBonus = DynamicFormMethods.getProportionalVacationBonus(formValues.vacationDays, formValues.startDate, formValues.finishDate, baseSalary, formValues.vacationBonus)
+
+    const twentyDaysByYear = DynamicFormMethods.getTwentyDaysByYear(formValues.startDate, formValues.finishDate, integratedSalary)
+
+    const total = () => { 
+        const myDownWages = downWages
+        const constitutionalIndem = (integratedSalary * 90).toFixed(2)
+        const mySeniorityBonus = seniorityBonus
+        const myProportionalBonus = proportionalBonus
+        const myProportionalVacationBonus = proportionalVacationBonus
+        const myTwentyDaysByYear = twentyDaysByYear
+        let result = Number(myDownWages) + Number(constitutionalIndem) + Number(mySeniorityBonus) + Number(myProportionalBonus) + Number(myProportionalVacationBonus) + Number(myTwentyDaysByYear);
+        return result.toFixed(2);
+    }
+
+
+    const { months, days } = differenceBetweenDates;
 
     const handleChange = (event:any,name:any,value:any) => { 
         if (!event) {
@@ -125,13 +164,21 @@ export const DynamicForm = () => {
                     onChange={(event) => handleChange(event,null,null)}
                 />
             </Form.Item>
-            <Form.Item label="Fecha de inicio en la empresa:">
+            <Form.Item label="¿Cuándo empezaste a trabajar en la empresa?">
                 <DatePicker
                     name="startDate"
                     id="startDate"
                     format={'DD/MM/YYYY'}
                     onChange={(date, dateString) => handleChange(null,'startDate',dateString)}
                 />
+            </Form.Item>
+                <Form.Item label="¿Cuándo dejaste de trabajar en la empresa?">
+                    <DatePicker
+                        name="finishDate"
+                        id="finishDate"
+                        format={'DD/MM/YYYY'}
+                        onChange={(date, dateString) => handleChange(null, 'finishDate', dateString)}
+                    />
             </Form.Item>
             <Form.Item label="Salario mensual antes de impuestos:">
                 <InputNumber
@@ -230,14 +277,25 @@ export const DynamicForm = () => {
         </Form>
             <Divider />
             <Typography>Fecha de ingreso:{formValues.startDate}</Typography>
-            <Typography>Fecha de salida: {today} </Typography>
+            <Typography>Fecha de salida: {formValues.finishDate} </Typography>
             <Typography>Salario base: {baseSalary.toFixed(2)} </Typography>
             <Typography>Días de aguinaldo: {formValues.bonusDays}</Typography>
             <Typography>Días de vacaciones: {formValues.vacationDays}</Typography>
             <Typography>Prima vacacional: {formValues.vacationBonus}</Typography>
             <Typography>Salario Diario Integrado: {integratedSalary.toFixed(2)}</Typography>
+            <Typography>Antigüedad: {`${months} meses`}</Typography>
+            <Typography>Días propor de ultimo año: {proportionalDays}</Typography>
+            <Typography>Días proporcionales de ultimo periodo: {proportionalDaysOfCurrentPeriod}</Typography>
             <Divider />
             <Typography>Indemnización constitucional: {(integratedSalary * 90).toFixed(2)}</Typography>
+            <Typography>Días desde el despido: {daysSinceDismissal}</Typography>
+            <Typography>Salarios caidos: {downWages}</Typography>
+            <Typography>Prima de antigüedad: {seniorityBonus}</Typography>
+            <Typography>Aguinaldo proporcional: {proportionalBonus}</Typography>
+            <Typography>Vacaciones Proporcionales: {proportionalVacation}</Typography>
+            <Typography>Prima Vacacional proporcional: {proportionalVacationBonus} </Typography>
+            <Typography>20 días por año: {twentyDaysByYear}</Typography>
+            <Typography>TOTAL:{total()}</Typography>
         </>
     )
 }
