@@ -1,6 +1,6 @@
 import * as React from 'react';
 import listOfBenefits from '../../utils/benefits.json';
-import moment from 'moment';
+import total from './total';
 
 import {
     Form, 
@@ -58,6 +58,9 @@ const BenefitValueInput = ({
 }
 
 export const DynamicForm = () => { 
+    // Faltan los estados de los inputs
+    // Falta input de horas extras
+    // Falta input de vacaciones adeudadas
     const [formValues, setFormValues] = React.useState({
         companyName: '',
         startDate: '',
@@ -69,6 +72,7 @@ export const DynamicForm = () => {
         bonusDays: 15, 
         vacationDays: 12,
         vacationBonus: 0.25,
+        earnedWages: 0,
     });
     const [benefitValues, setBenefitValues] = React.useState({});
 
@@ -98,15 +102,21 @@ export const DynamicForm = () => {
 
     const twentyDaysByYear = DynamicFormMethods.getTwentyDaysByYear(formValues.startDate, formValues.finishDate, integratedSalary)
 
-    const total = () => { 
-        const myDownWages = downWages
-        const constitutionalIndem = (integratedSalary * 90).toFixed(2)
-        const mySeniorityBonus = seniorityBonus
-        const myProportionalBonus = proportionalBonus
-        const myProportionalVacationBonus = proportionalVacationBonus
-        const myTwentyDaysByYear = twentyDaysByYear
-        let result = Number(myDownWages) + Number(constitutionalIndem) + Number(mySeniorityBonus) + Number(myProportionalBonus) + Number(myProportionalVacationBonus) + Number(myTwentyDaysByYear);
-        return result.toFixed(2);
+    const myEarnedWages = formValues.earnedWages * integratedSalary
+
+    const calculateTotal = () => { 
+        const anotherBenefits = 4915.56;
+        return total(
+            Number(downWages),
+            Number(integratedSalary),
+            Number(seniorityBonus),
+            Number(proportionalBonus),
+            Number(proportionalVacation),
+            Number(proportionalVacationBonus),
+            Number(twentyDaysByYear),
+            Number(formValues.earnedWages),
+            Number(anotherBenefits),
+        )
     }
 
 
@@ -268,8 +278,16 @@ export const DynamicForm = () => {
                     onChange={(value) => handleChange(null, 'vacationBonus', value)}
                 />
             </Form.Item>
+                {/*campo: ¿Te deben días trabajados? */}
+                <Form.Item label="¿Cuántos días trabajados te deben?">
+                    <InputNumber
+                        name="earnedWages"
+                        id="earnedWages"
+                        value={formValues.earnedWages}
+                        onChange={(value) => handleChange(null, 'earnedWages', value)}
+                    />
+                </Form.Item>
             <Form.Item>
-                
                 <Button type="primary" htmlType="submit" onClick={handleSubmit}>
                     Calcular
                 </Button>
@@ -284,18 +302,19 @@ export const DynamicForm = () => {
             <Typography>Prima vacacional: {formValues.vacationBonus}</Typography>
             <Typography>Salario Diario Integrado: {integratedSalary.toFixed(2)}</Typography>
             <Typography>Antigüedad: {`${months} meses`}</Typography>
+            <Typography>Días desde el despido: {daysSinceDismissal}</Typography>
             <Typography>Días propor de ultimo año: {proportionalDays}</Typography>
             <Typography>Días proporcionales de ultimo periodo: {proportionalDaysOfCurrentPeriod}</Typography>
             <Divider />
             <Typography>Indemnización constitucional: {(integratedSalary * 90).toFixed(2)}</Typography>
-            <Typography>Días desde el despido: {daysSinceDismissal}</Typography>
             <Typography>Salarios caidos: {downWages}</Typography>
             <Typography>Prima de antigüedad: {seniorityBonus}</Typography>
             <Typography>Aguinaldo proporcional: {proportionalBonus}</Typography>
             <Typography>Vacaciones Proporcionales: {proportionalVacation}</Typography>
             <Typography>Prima Vacacional proporcional: {proportionalVacationBonus} </Typography>
+            <Typography>Salarios Devengados: {myEarnedWages}</Typography>
             <Typography>20 días por año: {twentyDaysByYear}</Typography>
-            <Typography>TOTAL:{total()}</Typography>
+            <Typography>TOTAL:{calculateTotal()}</Typography>
         </>
     )
 }

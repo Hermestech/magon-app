@@ -27,7 +27,7 @@ export class DynamicFormMethods {
         const firedAnyversary = this.getFiredDatePlusOneYear(firedDate);
         const days = this.getDaysSinceDismission(firedDate);
         let result = 0;
-        if (today.isSameOrBefore(firedAnyversary)) {
+        if (today < moment(firedAnyversary, DATE_FORMAT)) {
             result = days * integratedSalry
             
         } else { 
